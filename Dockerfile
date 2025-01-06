@@ -21,23 +21,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libchromaprint-dev \
     curl
 
+# -- 1) Installer Numpy < 2 pour compatibilité avec Essentia
+RUN pip3 install --no-cache-dir "numpy<2.0"
 
-# Install the required Python packages
-RUN pip3 install essentia-tensorflow
-RUN pip3 install fastapi uvicorn requests python-multipart
+# -- 2) Installer essentia-tensorflow et autres dépendances Python
+RUN pip3 install --no-cache-dir essentia-tensorflow
+RUN pip3 install --no-cache-dir fastapi uvicorn requests python-multipart
 
 # Create a working directory
 WORKDIR /app
 
-# Clone the GitHub repository (uncomment if necessary)
+# Cloner le dépôt GitHub
 RUN git clone https://github.com/cobanov/audio-genre-detection.git .
 
-# Make sure that the 'download.sh' script is executable and run it
+# Rendre le script download.sh exécutable et l'exécuter
 RUN chmod +x download.sh
 RUN ./download.sh
 
-# Expose the port that the application will run on
-EXPOSE 8000
+# Exposer le port 8000
+EXPOSE 13400
 
-# Define the command to run your FastAPI application
+# Commande par défaut pour lancer ton application FastAPI
 CMD ["uvicorn", "predict_api:app", "--host", "0.0.0.0", "--port", "8000"]
