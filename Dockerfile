@@ -32,7 +32,7 @@ RUN pip3 install --no-cache-dir fastapi uvicorn requests python-multipart
 WORKDIR /app
 
 # Cloner le dépôt GitHub
-RUN git clone https://github.com/cobanov/audio-genre-detection.git .
+RUN git clone https://github.com/elfibro/audio-genre-detection.git .
 
 # Rendre le script download.sh exécutable et l'exécuter
 RUN chmod +x download.sh
