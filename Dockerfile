@@ -38,8 +38,8 @@ RUN git clone https://github.com/cobanov/audio-genre-detection.git .
 RUN chmod +x download.sh
 RUN ./download.sh
 
-# Exposer le port 8000
+# Exposer le port 13400
 EXPOSE 13400
 
 # Commande par défaut pour lancer ton application FastAPI
-CMD ["uvicorn", "predict_api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "predict_api:app", "--host", "0.0.0.0", "--port", "13400"]
