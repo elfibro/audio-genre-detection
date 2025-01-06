@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, Query
 import numpy as np
 
 from essentia.standard import (
@@ -67,7 +67,7 @@ class Predictor:
             shutil.copyfileobj(file, audio_file)
         return audio_path
 
-    def predict(self, audio_path):
+    def predict(self, audio_path, approachability_type="regression"):
         if not self.check_model_files_exist():
             raise FileNotFoundError(
                 "Model files do not exist. Please download them using download.sh script."
@@ -96,17 +96,20 @@ class Predictor:
         genre_secondary = genre_secondary_full.split("---")[1].strip()
 
         # Predicting Approachability
-        approachability_2c = self.approachability_2c_model(embeddings)
-        approachability_3c = self.approachability_3c_model(embeddings)
-        approachability_regression = self.approachability_regression_model(embeddings)
+        if approachability_type == "2c":
+            approachability = self.approachability_2c_model(embeddings).tolist()
+        elif approachability_type == "3c":
+            approachability = self.approachability_3c_model(embeddings).tolist()
+        elif approachability_type == "regression":
+            approachability = self.approachability_regression_model(embeddings).tolist()
+        else:
+            raise ValueError("Invalid approachability type. Choose from '2c', '3c', or 'regression'.")
 
         return {
             "Primary Genre": genre_primary,
             "Full Genre": genre_full,
             "Secondary Genre": genre_secondary,
-            "Approachability 2C": approachability_2c.tolist(),
-            "Approachability 3C": approachability_3c.tolist(),
-            "Approachability Regression": approachability_regression.tolist(),
+            "Approachability": approachability,
         }
 
 
@@ -114,7 +117,10 @@ predictor = Predictor()
 
 
 @app.post("/predict/")
-async def predict_genre_and_approachability(audio_file: UploadFile):
+async def predict_genre_and_approachability(
+    audio_file: UploadFile,
+    approachability_type: str = Query("regression", enum=["2c", "3c", "regression"]),
+):
     # Check if the uploaded file is an audio file
     if not audio_file.filename.endswith((".mp3", ".wav")):
         return {"error": "Invalid file type. Please upload a .mp3 or .wav file."}
@@ -125,7 +131,7 @@ async def predict_genre_and_approachability(audio_file: UploadFile):
         audio_data.write(audio_file.file.read())
 
     try:
-        result = predictor.predict(audio_path)
+        result = predictor.predict(audio_path, approachability_type)
     finally:
         # Clean up temporary audio file
         os.remove(audio_path)
